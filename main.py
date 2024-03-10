@@ -1,14 +1,16 @@
 import sys
 import sqlite3
+from ui import Ui_MainWindow
 from PyQt5 import uic
+from addEditCoffeeForm import UiAddWindow
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem
 
 
-class Coffee(QMainWindow):
+class Coffee(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super().__init__()
-        uic.loadUi('main.ui', self)
-        self.cor = sqlite3.connect('coffee.sqlite')
+        self.setupUi(self)
+        self.cor = sqlite3.connect('data/coffee.sqlite')
         self.cur = self.cor.cursor()
         self.see.clicked.connect(self.load_table)
         self.add_update_btn.clicked.connect(self.add_update)
@@ -32,22 +34,22 @@ class Coffee(QMainWindow):
         self.add_update_window.show()
 
 
-class AddUpdateBtn(QMainWindow):
+class AddUpdateBtn(QMainWindow, UiAddWindow):
     def __init__(self, parrent):
         super().__init__()
-        uic.loadUi('addEditCoffeeForm.ui', self)
+        self.setupUi(self)
         self.parrent = parrent
         self.add_btn.clicked.connect(self.add_data)
         self.update_btn.clicked.connect(self.update_data)
 
     def get_text(self, text):
         if not text:
-            raise ValueError
+            raise RuntimeError
         text = text.split(";")
         if len(text) != 7:
-            raise ValueError
+            raise RuntimeError
         if not text[0].isdigit() or not text[-1].isdigit() or not text[-2].isdigit():
-            raise ValueError
+            raise RuntimeError
         text[0], text[-1], text[-2] = int(text[0]), int(text[-1]), int(text[-2])
         text = tuple(text)
         return text
@@ -61,8 +63,8 @@ class AddUpdateBtn(QMainWindow):
                 f"'{text[3]}', '{text[4]}', {int(text[5])}, {int(text[6])})")
             self.parrent.cor.commit()
             self.parrent.load_table()
-        except ValueError:
-            self.statusBar().showMessage("Некорректный ввод")
+        except RuntimeError:
+            self.statusBar().showMessage('Некорректный ввод')
         except Exception:
             self.statusBar().showMessage("Error")
 
@@ -81,7 +83,7 @@ class AddUpdateBtn(QMainWindow):
             self.parrent.cor.commit()
             self.parrent.load_table()
 
-        except ValueError:
+        except RuntimeError:
             self.statusBar().showMessage('Некорректный ввод')
         except Exception:
             self.statusBar().showMessage("Error")
